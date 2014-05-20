@@ -2,33 +2,51 @@ import RPi.GPIO as GPIO
 import time
 import zmq
 
-context = zmq.Context()
-publisher = context.socket (zmq.PUB)
-publisher.bind ("tcp://*:9000")
+class Spacemaster(object):
 
-channel = 7
+    publisher = None
+    channel = 7
 
-def switch_fall(channel):
-    GPIO.remove_event_detect(channel)
-    GPIO.add_event_detect(channel, GPIO.RISING, callback=switch_rise, bouncetime=150)  
-    print("switch on")
-    publisher.send_json(dict(spaceopen=True))
+    def __init__(self):
+        GPIO.cleanup()
+        GPIO.setmode(GPIO.BOARD)
+        GPIO.setup(self.channel, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 
-def switch_rise(channel):
-    GPIO.remove_event_detect(channel)
-    GPIO.add_event_detect(channel, GPIO.FALLING, callback=switch_fall, bouncetime=150)  
-    print("switch off")
-    publisher.send_json(dict(spaceopen=False))
+        context = zmq.Context()
+        self.publisher = context.socket (zmq.PUB)
+        self.publisher.bind ("tcp://*:9000")
 
 
-GPIO.cleanup()
-GPIO.setmode(GPIO.BOARD)
-GPIO.setup(channel, GPIO.IN, pull_up_down=GPIO.PUD_UP)
-GPIO.add_event_detect(channel, GPIO.FALLING, callback=switch_fall, bouncetime=150)  
+    def switch_fall(self, channel):
+        GPIO.remove_event_detect(self.channel)
+        GPIO.add_event_detect(self.channel,
+                              GPIO.RISING,
+                              callback=self.switch_rise,
+                              bouncetime=150)
+        print("switch on")
+        self.publisher.send_json(dict(spaceopen=True))
+
+    def switch_rise(self, channel):
+        GPIO.remove_event_detect(self.channel)
+        GPIO.add_event_detect(self.channel,
+                              GPIO.FALLING,
+                              callback=self.switch_fall,
+                              bouncetime=150)
+        print("switch off")
+        self.publisher.send_json(dict(spaceopen=False))
 
 
-while True:
-    time.sleep(600)
+    def run(self):
+        GPIO.add_event_detect(self.channel,
+                              GPIO.FALLING,
+                              callback=self.switch_fall,
+                              bouncetime=150)
+        while True:
+            time.sleep(600)
 
-GPIO.cleanup()
+        GPIO.cleanup()
 
+
+def run():
+    spacemaster = Spacemaster()
+    spacemaster.run()
