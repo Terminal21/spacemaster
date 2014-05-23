@@ -29,13 +29,13 @@ class Spacemaster(object):
         guess_gpio = GPIO.HIGH
 
         while True:
-            state_gpio = GPIO.input(channel)
+            state_gpio = GPIO.input(self.channel)
             if state_gpio != guess_gpio:
                 guess_gpio = state_gpio
                 if state_gpio == GPIO.LOW:
-                    self.switch_fall(channel)
+                    self.switch_fall(self.channel)
                 else:
-                    self.switch_rise(channel)
+                    self.switch_rise(self.channel)
             
             time.sleep(10)
 
