@@ -18,31 +18,26 @@ class Spacemaster(object):
 
 
     def switch_fall(self, channel):
-        GPIO.remove_event_detect(self.channel)
-        GPIO.add_event_detect(self.channel,
-                              GPIO.RISING,
-                              callback=self.switch_rise,
-                              bouncetime=150)
         print("switch on")
         self.publisher.send_json(dict(spaceopen=True))
 
     def switch_rise(self, channel):
-        GPIO.remove_event_detect(self.channel)
-        GPIO.add_event_detect(self.channel,
-                              GPIO.FALLING,
-                              callback=self.switch_fall,
-                              bouncetime=150)
         print("switch off")
         self.publisher.send_json(dict(spaceopen=False))
 
-
     def run(self):
-        GPIO.add_event_detect(self.channel,
-                              GPIO.FALLING,
-                              callback=self.switch_fall,
-                              bouncetime=150)
+        guess_gpio = GPIO.HIGH
+
         while True:
-            time.sleep(600)
+            state_gpio = GPIO.input(channel)
+            if state_gpio != guess_gpio:
+                guess_gpio = state_gpio
+                if state_gpio == GPIO.LOW:
+                    self.switch_fall(channel)
+                else:
+                    self.switch_rise(channel)
+            
+            time.sleep(10)
 
         GPIO.cleanup()
 
