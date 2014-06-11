@@ -1,4 +1,5 @@
 import RPi.GPIO as GPIO
+import logging
 import time
 import zmq
 
@@ -15,10 +16,11 @@ class Spacemaster(object):
         context = zmq.Context()
         self.publisher = context.socket (zmq.PUB)
         self.publisher.bind ("tcp://*:9000")
+        logging.info("SpaceMaster initialized")
 
     def publish(self, open=False):
-        print("switch {}".format("on" if open else "off"))
-        self.publisher.send_json(dict(sppaceopen=open))
+        logging.info("switch is {}".format("on" if open else "off"))
+        self.publisher.send_json(dict(spaceopen=open))
 
     def run(self):
         guess_gpio = GPIO.HIGH
@@ -32,9 +34,13 @@ class Spacemaster(object):
                 time.sleep(10)
             self.publish(state_gpio==GPIO.LOW)
 
+        logging.info("SpaceMaster died, cleaning up")
         GPIO.cleanup()
 
 
 def run():
+    logformat = "%(asctime)s %(levelname)s [%(name)s][%(threadName)s] %(message)s"
+    logging.basicConfig(format=logformat, level=logging.DEBUG)
+
     spacemaster = Spacemaster()
     spacemaster.run()
