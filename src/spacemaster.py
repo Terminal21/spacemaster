@@ -16,7 +16,7 @@ class Spacemaster(object):
         self.publisher = context.socket (zmq.PUB)
         self.publisher.bind ("tcp://*:9000")
 
-    def publish(open=False):
+    def publish(self, open=False):
         print("switch {}".format("on" if open else "off"))
         self.publisher.send_json(dict(sppaceopen=open))
 
