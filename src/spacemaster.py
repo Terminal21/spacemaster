@@ -16,28 +16,21 @@ class Spacemaster(object):
         self.publisher = context.socket (zmq.PUB)
         self.publisher.bind ("tcp://*:9000")
 
-
-    def switch_fall(self, channel):
-        print("switch on")
-        self.publisher.send_json(dict(spaceopen=True))
-
-    def switch_rise(self, channel):
-        print("switch off")
-        self.publisher.send_json(dict(spaceopen=False))
+    def publish(open=False):
+        print("switch {}".format("on" if open else "off"))
+        self.publisher.send_json(dict(sppaceopen=open))
 
     def run(self):
         guess_gpio = GPIO.HIGH
 
-        while True:
-            state_gpio = GPIO.input(self.channel)
-            if state_gpio != guess_gpio:
-                guess_gpio = state_gpio
-                if state_gpio == GPIO.LOW:
-                    self.switch_fall(self.channel)
-                else:
-                    self.switch_rise(self.channel)
-            
-            time.sleep(10)
+	while True:
+            for i in range(6):
+                state_gpio = GPIO.input(self.channel)
+                if state_gpio != guess_gpio:
+                    guess_gpio = state_gpio
+                    self.publish(stat_gpio==GPIO.LOW)
+                time.sleep(10)
+            self.publish(stat_gpio==GPIO.LOW)
 
         GPIO.cleanup()
 
