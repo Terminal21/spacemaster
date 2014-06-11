@@ -28,9 +28,9 @@ class Spacemaster(object):
                 state_gpio = GPIO.input(self.channel)
                 if state_gpio != guess_gpio:
                     guess_gpio = state_gpio
-                    self.publish(stat_gpio==GPIO.LOW)
+                    self.publish(state_gpio==GPIO.LOW)
                 time.sleep(10)
-            self.publish(stat_gpio==GPIO.LOW)
+            self.publish(state_gpio==GPIO.LOW)
 
         GPIO.cleanup()
 
