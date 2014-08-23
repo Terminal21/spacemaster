@@ -4,5 +4,9 @@ eggs
 include
 lib
 parts
+local
+src/RPi.GPIO
 .installed.cfg
 *.swp
+*.pyc
+.mr.developer.cfg
