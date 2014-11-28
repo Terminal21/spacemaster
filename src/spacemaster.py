@@ -1,4 +1,5 @@
 import RPi.GPIO as GPIO
+import logging
 import time
 import zmq
 
@@ -15,38 +16,31 @@ class Spacemaster(object):
         context = zmq.Context()
         self.publisher = context.socket (zmq.PUB)
         self.publisher.bind ("tcp://*:9000")
+        logging.info("SpaceMaster initialized")
 
-
-    def switch_fall(self, channel):
-        GPIO.remove_event_detect(self.channel)
-        GPIO.add_event_detect(self.channel,
-                              GPIO.RISING,
-                              callback=self.switch_rise,
-                              bouncetime=150)
-        print("switch on")
-        self.publisher.send_json(dict(spaceopen=True))
-
-    def switch_rise(self, channel):
-        GPIO.remove_event_detect(self.channel)
-        GPIO.add_event_detect(self.channel,
-                              GPIO.FALLING,
-                              callback=self.switch_fall,
-                              bouncetime=150)
-        print("switch off")
-        self.publisher.send_json(dict(spaceopen=False))
-
+    def publish(self, open=False):
+        logging.info("switch is {}".format("on" if open else "off"))
+        self.publisher.send_json(dict(spaceopen=open))
 
     def run(self):
-        GPIO.add_event_detect(self.channel,
-                              GPIO.FALLING,
-                              callback=self.switch_fall,
-                              bouncetime=150)
-        while True:
-            time.sleep(600)
+        guess_gpio = GPIO.HIGH
 
+	while True:
+            for i in range(6):
+                state_gpio = GPIO.input(self.channel)
+                if state_gpio != guess_gpio:
+                    guess_gpio = state_gpio
+                    self.publish(state_gpio==GPIO.LOW)
+                time.sleep(10)
+            self.publish(state_gpio==GPIO.LOW)
+
+        logging.info("SpaceMaster died, cleaning up")
         GPIO.cleanup()
 
 
 def run():
+    logformat = "%(asctime)s %(levelname)s [%(name)s][%(threadName)s] %(message)s"
+    logging.basicConfig(format=logformat, level=logging.DEBUG)
+
     spacemaster = Spacemaster()
     spacemaster.run()
