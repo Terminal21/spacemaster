@@ -10,7 +10,7 @@ class Spacemaster(object):
     publisher = None
     switch = 14
     door = 4
-
+    
     def __init__(self):
         GPIO.cleanup()
         GPIO.setmode(GPIO.BCM)
@@ -33,7 +33,7 @@ class Spacemaster(object):
         if (GPIO.input(self.switch) == GPIO.HIGH) and (GPIO.input(self.door) == GPIO.HIGH):
             return False
         return (GPIO.input(self.switch) == GPIO.HIGH)
-    
+   
     def run(self):
         last_state = self.get_state()
         self.publish(last_state)
