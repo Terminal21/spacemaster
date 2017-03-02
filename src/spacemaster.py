@@ -1,9 +1,16 @@
 import RPi.GPIO as GPIO
+import telnetlib
 import logging
 import time
 import requests
 
 GPIO.cleanup()
+def telnet(txt):
+    telnet = telnetlib.Telnet('192.168.21.152')
+    telnet.write('\n\n'.encode('latin1'))
+    telnet.write(chr(0x10).encode('latin1'))
+    telnet.write(chr(0).encode('latin1'))
+    telnet.write(txt.encode('latin1'))
 
 class Spacemaster(object):
 
@@ -15,22 +22,25 @@ class Spacemaster(object):
         GPIO.cleanup()
         GPIO.setmode(GPIO.BCM)
         GPIO.setup(self.switch, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
-        GPIO.setuo(self.door, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
+        GPIO.setup(self.door, GPIO.IN, pull_up_down=GPIO.PUD_UP)
         logging.info("SpaceMaster initialized")
+        telnet("SpaceMaster initialized")
 
     def publish(self, open=False):
         print "publishing"
         if open:
+            telnet('SPACE OPEN')
             requests.post('http://putin.local:8888/open', data={'status':'open'})
             requests.post('http://putin.local:8889/open', data={'status':'open'})
         else:
             requests.post('http://putin.local:8888/close', data={'status':'closed'})
             requests.post('http://putin.local:8889/close', data={'status':'closed'})
+            telnet('SPACE CLOSED')
         print "OK"
 
     def get_state(self):
         #return (GPIO.input(self.switch) == GPIO.HIGH)
-        if (GPIO.input(self.switch) == GPIO.HIGH) and (GPIO.input(self.door) == GPIO.HIGH):
+        if (GPIO.input(self.switch) == GPIO.HIGH) and (GPIO.input(self.door) == GPIO.LOW):
             return False
         return (GPIO.input(self.switch) == GPIO.HIGH)
    
@@ -45,6 +55,7 @@ class Spacemaster(object):
             time.sleep(5)
 
         logging.info("SpaceMaster died, cleaning up")
+        telnet('SpaceMaster died!')
         GPIO.cleanup()
 
 
