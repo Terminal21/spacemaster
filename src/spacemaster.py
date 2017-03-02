@@ -8,12 +8,14 @@ GPIO.cleanup()
 class Spacemaster(object):
 
     publisher = None
-    channel = 14
+    switch = 14
+    door = 4
 
     def __init__(self):
         GPIO.cleanup()
         GPIO.setmode(GPIO.BCM)
-        GPIO.setup(self.channel, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
+        GPIO.setup(self.switch, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
+        GPIO.setuo(self.door, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
         logging.info("SpaceMaster initialized")
 
     def publish(self, open=False):
@@ -27,7 +29,10 @@ class Spacemaster(object):
         print "OK"
 
     def get_state(self):
-        return (GPIO.input(self.channel) == GPIO.HIGH)
+        #return (GPIO.input(self.switch) == GPIO.HIGH)
+        if (GPIO.input(self.switch) == GPIO.HIGH) and (GPIO.input(self.door) == GPIO.HIGH):
+            return False
+        return (GPIO.input(self.switch) == GPIO.HIGH)
     
     def run(self):
         last_state = self.get_state()
