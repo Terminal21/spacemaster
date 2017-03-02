@@ -1,38 +1,43 @@
 import RPi.GPIO as GPIO
 import logging
 import time
-import zmq
+import requests
+
+GPIO.cleanup()
 
 class Spacemaster(object):
 
     publisher = None
-    channel = 7
+    channel = 14
 
     def __init__(self):
         GPIO.cleanup()
-        GPIO.setmode(GPIO.BOARD)
-        GPIO.setup(self.channel, GPIO.IN, pull_up_down=GPIO.PUD_UP)
-
-        context = zmq.Context()
-        self.publisher = context.socket (zmq.PUB)
-        self.publisher.bind ("tcp://*:9000")
+        GPIO.setmode(GPIO.BCM)
+        GPIO.setup(self.channel, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
         logging.info("SpaceMaster initialized")
 
     def publish(self, open=False):
-        logging.info("switch is {}".format("on" if open else "off"))
-        self.publisher.send_json(dict(spaceopen=open))
+        print "publishing"
+        if open:
+            requests.post('http://putin.local:8888/open', data={'status':'open'})
+            requests.post('http://putin.local:8889/open', data={'status':'open'})
+        else:
+            requests.post('http://putin.local:8888/close', data={'status':'closed'})
+            requests.post('http://putin.local:8889/close', data={'status':'closed'})
+        print "OK"
 
+    def get_state(self):
+        return (GPIO.input(self.channel) == GPIO.HIGH)
+    
     def run(self):
-        guess_gpio = GPIO.HIGH
-
-	while True:
-            for i in range(6):
-                state_gpio = GPIO.input(self.channel)
-                if state_gpio != guess_gpio:
-                    guess_gpio = state_gpio
-                    self.publish(state_gpio==GPIO.LOW)
-                time.sleep(10)
-            self.publish(state_gpio==GPIO.LOW)
+        last_state = self.get_state()
+        self.publish(last_state)
+        while True:
+            new_state = self.get_state()
+            if new_state != last_state:
+                last_state = new_state
+                self.publish(new_state)
+            time.sleep(5)
 
         logging.info("SpaceMaster died, cleaning up")
         GPIO.cleanup()
