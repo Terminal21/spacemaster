@@ -1,4 +1,6 @@
 bin
+local
+*.log*
 develop-eggs
 eggs
 include
@@ -6,3 +8,5 @@ lib
 parts
 .installed.cfg
 *.swp
+*.py_old
+*.pyc
