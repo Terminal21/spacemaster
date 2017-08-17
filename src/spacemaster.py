@@ -6,7 +6,9 @@ import requests
 
 GPIO.cleanup()
 def telnet(txt):
-    telnet = telnetlib.Telnet('192.168.21.152')
+    #XXX
+    return
+    telnet = telnetlib.Telnet('192.168.21.148')
     telnet.write('\n\n'.encode('latin1'))
     telnet.write(chr(0x10).encode('latin1'))
     telnet.write(chr(0).encode('latin1'))
