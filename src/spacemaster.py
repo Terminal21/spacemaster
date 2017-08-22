@@ -6,9 +6,12 @@ import requests
 
 GPIO.cleanup()
 def telnet(txt):
-    #XXX
-    return
-    telnet = telnetlib.Telnet('192.168.21.148')
+    try:
+        telnet = telnetlib.Telnet('192.168.21.148')
+    except:
+        logging.error('Cannot connect to display, make sure it is on the '
+                      'network with IP 192.168.21.148')
+        return
     telnet.write('\n\n'.encode('latin1'))
     telnet.write(chr(0x10).encode('latin1'))
     telnet.write(chr(0).encode('latin1'))
